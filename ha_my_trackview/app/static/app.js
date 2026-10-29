@@ -16,6 +16,7 @@ const S = {
   wasImporting: false, pollTimer: null, logTimer: null, logLast: 0,
 };
 const PAGE_SIZES = [10, 25, 50, 100, 0];
+const DONATE_URL = "https://paypal.me/breitide";
 
 // ------------------------------------------------------------------ Helfer
 const $ = (q, el = document) => el.querySelector(q);
@@ -244,6 +245,7 @@ function shell(scope) {
     <button class="btn primary lg" data-act="import">${ic("refresh")}${t("btn_import_now")}</button>
     <button class="btn lg" data-act="reimport">${ic("sync")}${t("btn_reimport")}</button>
     <div class="filebox">${ic("file")}<span class="hide-sm">${t("gps_file")}</span><code title="${esc(S.settings.gps_file)}">${esc(S.settings.gps_file)}</code><a href="#/settings">${t("change")}</a></div>
+    <a class="donate" href="${DONATE_URL}" target="_blank" rel="noopener" title="${esc(t("donate_tip"))}" aria-label="${esc(t("donate_tip"))}"><svg class="i" viewBox="0 0 24 24"><path d="M12 21s-7-4.4-9.3-8.6C1.2 9.6 2.6 6 6 5.6c2-.2 3.4.9 4 2 .6-1.1 2-2.2 4-2 3.4.4 4.8 4 3.3 6.8C19 16.6 12 21 12 21z" fill="currentColor" stroke="none"/></svg>PayPal</a>
   </div>
   <div id="notices"></div>
   <div class="stats" id="stats"></div>
@@ -574,13 +576,25 @@ function paletteColor(i) {
 }
 const pinIcon = (cls) => L.divIcon({ className: `pin ${cls}`, iconSize: [14, 14] });
 
+// Hebt eine Ebene hervor (oben, breiter) und blendet die übrigen etwas ab.
+function highlightLayers(all, sel) {
+  all.forEach((l, i) => {
+    if (!l) return;
+    const on = sel === null || sel === i;
+    l.line.setStyle({ weight: sel === i ? 6 : 4, opacity: on ? 0.95 : 0.45 });
+    l.casing.setStyle({ weight: sel === i ? 10 : 7, opacity: on ? 0.75 : 0.3 });
+  });
+  if (sel !== null && all[sel]) { all[sel].casing.bringToFront(); all[sel].line.bringToFront(); }
+}
+
 function drawTrack(group, geometry, colors) {
-  const layers = [];
+  const layers = [];  // Index = Etappe
   geometry.forEach((seg, i) => {
     if (seg.length < 2) return;
     const c = colors[Math.min(i, colors.length - 1)];
-    L.polyline(seg, { color: "#ffffff", weight: 7, opacity: 0.75, interactive: false }).addTo(group);
-    layers.push(L.polyline(seg, { color: c, weight: 4, opacity: 0.95 }).addTo(group));
+    const casing = L.polyline(seg, { color: "#ffffff", weight: 7, opacity: 0.75, interactive: false }).addTo(group);
+    const line = L.polyline(seg, { color: c, weight: 4, opacity: 0.95 }).addTo(group);
+    layers[i] = { casing, line };
   });
   const first = geometry.find((s) => s.length);
   const last = [...geometry].reverse().find((s) => s.length);
@@ -604,6 +618,21 @@ async function openViewer(ids) {
   const map = L.map($(".map", m.el), { zoomControl: true, attributionControl: true });
   osmLayer().addTo(map);
   const group = L.featureGroup().addTo(map);
+  const body = $(".viewer-body", m.el);
+  const narrow = window.matchMedia("(max-width: 1000px)").matches;
+  let sidePref = null;
+  try { sidePref = localStorage.getItem("tv_side"); } catch (_) { /* privat */ }
+  const setSide = (open) => {
+    body.classList.toggle("side-hidden", !open);
+    const b = $("#vSide", m.el);
+    if (b) b.classList.toggle("on", open);
+    setTimeout(() => { if (!closed) map.invalidateSize(); }, 30);
+  };
+  const toggleSide = () => {
+    const open = body.classList.contains("side-hidden");
+    setSide(open);
+    if (!narrow) { try { localStorage.setItem("tv_side", open ? "1" : "0"); } catch (_) { /* privat */ } }
+  };
 
   if (single) {
     const tr = data;
@@ -613,8 +642,10 @@ async function openViewer(ids) {
     const side = $(".viewer-side", m.el);
     const nav = (S.route === "trips" || S.route === "unassigned");
     head.innerHTML = `
-      <div>
+      <div class="vh-top">
         <div class="title">${ic("route")}${t("v_trip")} ${esc(fmtDate(tr.start_ts, true))}${tr.status === "running" ? ` <span class="pill run"><span class="dot ok pulse"></span>${t("running")}</span>` : ""}</div>
+        <div class="tools">TOOLS</div>
+      </div>
         <div class="facts">
           <span>${t("col_date")} <b>${esc(fmtDate(tr.start_ts))}</b></span>
           <span>${t("col_start")} <b>${fmtTime(tr.start_ts)}</b></span>
@@ -623,22 +654,27 @@ async function openViewer(ids) {
           <span>${t("col_driving")} <b>${fmtDur(tr.driving_s)}</b></span>
           <span>${S.settings.distance_unit === "mi" ? t("col_distance_mi") : t("col_distance")} <b>${fmtDist(tr.distance_m)}</b></span>
           <span>${t("col_stages")} <b>${tr.stage_count}</b></span>
-        </div>
-      </div>
-      <div class="tools">
+        </div>`.replace("TOOLS", `
         <div class="swatches" id="sw">${[S.settings.default_color, ...S.info.palette.slice(1)].map((c) => `<button class="swatch" data-c="${c}" style="background:${c}" title="${c}"></button>`).join("")}
           <input type="color" id="colorPick" value="${color}" title="${t("v_color")}"></div>
         ${tr.stage_count > 1 ? `<label class="chk"><input type="checkbox" id="byStage"> ${t("v_stages")}</label>` : ""}
         <button class="btn primary" id="vPdf">${ic("pdf")}${t("v_pdf")}</button>
         ${nav ? `<button class="icon-btn" id="vPrev" title="${t("v_prev")}" ${tr.prev_id ? "" : "disabled"}>${ic("left")}</button><button class="icon-btn" id="vNext" title="${t("v_next")}" ${tr.next_id ? "" : "disabled"}>${ic("right")}</button>` : ""}
         <button class="icon-btn" id="vSide" title="${t("v_side")}">${ic("list")}</button>
-        <button class="icon-btn" id="vClose" title="${t("v_close")}">${ic("x")}</button>
-      </div>`;
+        <button class="icon-btn" id="vClose" title="${t("v_close")}">${ic("x")}</button>`);
     let stageLayers = [];
+    let selStage = null;
+    const selectStage = (i) => {
+      selStage = i;
+      highlightLayers(stageLayers, selStage);
+      $$(".leg[data-stage]", side).forEach((el) => el.classList.toggle("on", +el.dataset.stage === selStage));
+    };
     const draw = () => {
       group.clearLayers();
       const colors = byStage ? tr.geometry.map((_, i) => paletteColor(i)) : [color];
       stageLayers = drawTrack(group, tr.geometry, colors);
+      stageLayers.forEach((l, i) => l && l.line.on("click", () => selectStage(selStage === i ? null : i)));
+      if (selStage !== null) selectStage(selStage);
       $$(".swatch", head).forEach((s) => s.classList.toggle("on", !byStage && s.dataset.c.toLowerCase() === color.toLowerCase()));
       $$(".leg .sw", side).forEach((s, i) => { s.style.background = colors[Math.min(i, colors.length - 1)]; });
     };
@@ -666,7 +702,7 @@ async function openViewer(ids) {
       if (sw) return setColor(sw.dataset.c);
       if (e.target.closest("#vPdf")) return downloadPdf([tr.id], byStage, byStage ? null : color);
       if (e.target.closest("#vClose")) return m.close();
-      if (e.target.closest("#vSide")) return side.classList.toggle("mobile-open");
+      if (e.target.closest("#vSide")) return toggleSide();
       const pv = e.target.closest("#vPrev"), nx = e.target.closest("#vNext");
       if ((pv && tr.prev_id) || (nx && tr.next_id)) { m.close(); openViewer([pv ? tr.prev_id : tr.next_id]); }
     });
@@ -679,8 +715,11 @@ async function openViewer(ids) {
     side.addEventListener("click", (e) => {
       const st = e.target.closest("[data-stage]");
       if (!st) return;
-      const l = stageLayers[+st.dataset.stage];
-      if (l) map.fitBounds(l.getBounds(), { padding: [30, 30] });
+      const i = +st.dataset.stage;
+      if (selStage === i) return selectStage(null);
+      selectStage(i);
+      const l = stageLayers[i];
+      if (l) map.fitBounds(l.line.getBounds(), { padding: [30, 30] });
     });
   } else {
     const tracks = data.tracks;
@@ -694,23 +733,33 @@ async function openViewer(ids) {
     const head = $(".viewer-head", m.el);
     const side = $(".viewer-side", m.el);
     const sum = (f) => tracks.reduce((a, x) => a + x[f], 0);
-    head.innerHTML = `<div><div class="title">${ic("map")}${t("v_trips", { n: tracks.length })}</div>
+    head.innerHTML = `<div class="vh-top"><div class="title">${ic("map")}${t("v_trips", { n: tracks.length })}</div>
+      <div class="tools"><button class="btn primary" id="vPdf">${ic("pdf")}${t("v_pdf")}</button>
+      <button class="icon-btn" id="vSide" title="${t("v_side")}">${ic("list")}</button><button class="icon-btn" id="vClose" title="${t("v_close")}">${ic("x")}</button></div></div>
       <div class="facts"><span>${esc(fmtDate(tracks[0].start_ts))} – ${esc(fmtDate(tracks[tracks.length - 1].end_ts))}</span>
       <span>${t("col_duration")} <b>${fmtDur(sum("duration_s"))}</b></span><span>${t("col_driving")} <b>${fmtDur(sum("driving_s"))}</b></span>
       <span>${S.settings.distance_unit === "mi" ? t("col_distance_mi") : t("col_distance")} <b>${fmtDist(sum("distance_m"))}</b></span>
-      <span>${t("col_stages")} <b>${sum("stage_count")}</b></span></div></div>
-      <div class="tools"><button class="btn primary" id="vPdf">${ic("pdf")}${t("v_pdf")}</button>
-      <button class="icon-btn" id="vSide" title="${t("v_side")}">${ic("list")}</button><button class="icon-btn" id="vClose" title="${t("v_close")}">${ic("x")}</button></div>`;
-    const groups = tracks.map((x) => { const g = L.featureGroup(); drawTrack(g, x.geometry, [x._c]); g.addTo(group); return g; });
+      <span>${t("col_stages")} <b>${sum("stage_count")}</b></span></div>`;
+    const trackLayers = [];
+    const groups = tracks.map((x) => { const g = L.featureGroup(); trackLayers.push(drawTrack(g, x.geometry, [x._c])); g.addTo(group); return g; });
+    let selTrack = null;
+    const selectTrack = (i) => {
+      selTrack = i;
+      trackLayers.forEach((segs, k) => highlightLayers(segs, selTrack === null ? null : (k === selTrack ? -1 : -2)));
+      if (selTrack !== null) trackLayers[selTrack].forEach((l) => { if (l) { l.line.setStyle({ weight: 6, opacity: 0.95 }); l.casing.setStyle({ weight: 10, opacity: 0.75 }); l.casing.bringToFront(); } });
+      if (selTrack !== null) trackLayers[selTrack].forEach((l) => l && l.line.bringToFront());
+      $$(".leg[data-row]", side).forEach((el) => el.classList.toggle("on", +el.dataset.row === selTrack));
+    };
+    trackLayers.forEach((segs, k) => segs.forEach((l) => l && l.line.on("click", () => selectTrack(selTrack === k ? null : k))));
     side.innerHTML = `<h4>${t("v_legend")}</h4>` + tracks.map((x, i) => `
-      <div class="leg"><input type="checkbox" checked data-tog="${i}"><span class="click" data-zoom="${i}" style="cursor:pointer"><span class="sw" style="display:inline-block;background:${x._c};margin-right:6px;vertical-align:-1px"></span><b>${esc(fmtDate(x.start_ts, true))}</b>${x.name ? `<br><span class="muted">${esc(x.name)}</span>` : ""}</span>
+      <div class="leg" data-row="${i}"><input type="checkbox" checked data-tog="${i}"><span class="click" data-zoom="${i}" style="cursor:pointer"><span class="sw" style="display:inline-block;background:${x._c};margin-right:6px;vertical-align:-1px"></span><b>${esc(fmtDate(x.start_ts, true))}</b>${x.name ? `<br><span class="muted">${esc(x.name)}</span>` : ""}</span>
       <span class="num">${fmtDist(x.distance_m)}<br><span class="muted">${fmtDur(x.duration_s)}</span></span></div>`).join("");
     const b = group.getBounds();
     if (b.isValid()) map.fitBounds(b, { padding: [30, 30] });
     head.addEventListener("click", (e) => {
       if (e.target.closest("#vPdf")) return downloadPdf(tracks.map((x) => x.id), false, null);
       if (e.target.closest("#vClose")) return m.close();
-      if (e.target.closest("#vSide")) side.classList.toggle("mobile-open");
+      if (e.target.closest("#vSide")) toggleSide();
     });
     side.addEventListener("change", (e) => {
       const i = e.target.dataset.tog;
@@ -719,9 +768,14 @@ async function openViewer(ids) {
     });
     side.addEventListener("click", (e) => {
       const z = e.target.closest("[data-zoom]");
-      if (z) map.fitBounds(groups[+z.dataset.zoom].getBounds(), { padding: [30, 30] });
+      if (!z) return;
+      const i = +z.dataset.zoom;
+      if (selTrack === i) return selectTrack(null);
+      selectTrack(i);
+      map.fitBounds(groups[i].getBounds(), { padding: [30, 30] });
     });
   }
+  setSide(narrow ? false : sidePref !== "0");
   setTimeout(() => { if (!closed) map.invalidateSize(); }, 50);
 }
 
@@ -874,7 +928,8 @@ async function viewLog() {
   S.logLast = 0;
   $("#view").innerHTML = `<section class="panel"><div class="panel-head"><h2>${t("log_title")}</h2><span class="sub">${t("log_sub")}</span>
     <div class="right"><label class="muted">${t("log_level")}</label><select id="logLevel"><option value="debug">Debug</option><option value="info" selected>Info</option><option value="warning">Warning</option><option value="error">Error</option></select>
-    <label class="chk"><input type="checkbox" id="logAuto" checked> ${t("log_auto")}</label></div></div>
+    <label class="chk"><input type="checkbox" id="logAuto" checked> ${t("log_auto")}</label>
+    <button class="btn sm danger" id="logClear">${ic("trash")}${t("log_clear")}</button></div></div>
     <div class="table-wrap"><table class="list log"><thead><tr><th>${t("col_time")}</th><th>${t("col_level")}</th><th>${t("col_source")}</th><th>${t("col_msg")}</th></tr></thead><tbody id="logBody"></tbody></table></div></section>`;
   const load = async () => {
     try {
@@ -885,6 +940,10 @@ async function viewLog() {
     } catch (_) { /* egal */ }
   };
   $("#logLevel").addEventListener("change", load);
+  $("#logClear").addEventListener("click", async () => {
+    if (!(await confirmDlg(t("log_clear_q"), { ok: t("log_clear"), danger: true }))) return;
+    try { await api("api/log/clear", { method: "POST" }); load(); } catch (e) { toast(errText(e), "err"); }
+  });
   await load();
   clearInterval(S.logTimer);
   S.logTimer = setInterval(() => { if (S.route === "log" && $("#logAuto") && $("#logAuto").checked) load(); }, 4000);

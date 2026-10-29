@@ -25,7 +25,7 @@ from pdfexport import TEXT as PDF_TEXT  # noqa: E402
 from pdfexport import build_pdf  # noqa: E402
 from tiles import TileCache  # noqa: E402
 
-VERSION = os.environ.get("TRACKVIEW_VERSION", "1.0.0")
+VERSION = os.environ.get("TRACKVIEW_VERSION", "1.1.0")
 DATA = os.environ.get("TRACKVIEW_DATA", "/data")
 PORT = int(os.environ.get("TRACKVIEW_PORT", "8099"))
 DEV = os.environ.get("TRACKVIEW_DEV") == "1"
@@ -763,6 +763,12 @@ async def api_log(request):
     rows = [r for r in ring.buf
             if r["id"] > after and levels.get(r["level"].lower(), 40) >= minlvl]
     return web.json_response({"rows": rows[-500:], "last": ring.seq})
+
+
+@routes.post("/api/log/clear")
+async def api_log_clear(request):
+    ring.buf.clear()
+    return web.json_response({"ok": True})
 
 
 # ------------------------------------------------------------------- Start

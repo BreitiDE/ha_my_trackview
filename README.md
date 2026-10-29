@@ -88,4 +88,6 @@ Speed in km/h. Timestamps ISO 8601 (with or without time zone) or Unix time.
 
 ---
 
+☕ Gefällt dir die App? / Like the app? [Spenden / Donate via PayPal](https://paypal.me/breitide)
+
 Map data © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright). License: MIT.

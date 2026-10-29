@@ -79,6 +79,10 @@ label.chk { display: inline-flex; align-items: center; gap: 8px; cursor: pointer
 .filebox { margin-left: auto; display: flex; align-items: center; gap: 10px; border: 1px solid var(--border); background: var(--surface); border-radius: 8px; padding: 9px 14px; color: var(--ink-2); max-width: 100%; }
 .filebox code { color: var(--ink); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+.donate { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--ink); border-radius: 8px; padding: 9px 12px; text-decoration: none; font-weight: 600; font-size: 13px; }
+.donate svg { color: var(--accent); }
+.donate:hover { background: var(--hover); }
+
 /* ---------- Kennzahlen */
 .stats { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 14px; margin-bottom: 18px; }
 .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; min-width: 0; }
@@ -146,15 +150,18 @@ td.actions .icon-btn { margin-left: 4px; }
 .modal .opt .d { color: var(--ink-2); font-size: 13px; margin-top: 2px; }
 
 .viewer { max-width: 1400px; height: calc(100vh - 40px); display: flex; flex-direction: column; padding: 0; overflow: hidden; }
-.viewer-head { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; gap: 14px; align-items: flex-start; flex-wrap: wrap; }
+.viewer-head { padding: 14px 18px 12px; border-bottom: 1px solid var(--border); }
+.vh-top { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
 .viewer-head .title { font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
-.viewer-head .facts { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 6px; color: var(--ink-2); }
+.viewer-head .facts { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--grid); color: var(--ink-2); }
 .viewer-head .facts b { color: var(--ink); font-variant-numeric: tabular-nums; }
 .viewer-head .tools { margin-left: auto; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .swatches { display: flex; gap: 6px; align-items: center; }
 .swatch { width: 22px; height: 22px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; padding: 0; }
 .swatch.on { border-color: var(--ink); }
-.viewer-body { flex: 1; display: flex; min-height: 0; }
+.viewer-body { flex: 1; display: flex; min-height: 0; position: relative; }
+.viewer-body.side-hidden .viewer-side { display: none; }
+.icon-btn.on { background: var(--accent-soft); color: var(--accent-text); border-color: transparent; }
 .viewer-map { flex: 1; min-width: 0; position: relative; }
 .viewer-map .map { position: absolute; inset: 0; }
 .viewer-side { width: 330px; border-left: 1px solid var(--border); overflow: auto; padding: 12px 14px; }
@@ -162,7 +169,8 @@ td.actions .icon-btn { margin-left: 4px; }
 .leg { display: grid; grid-template-columns: auto 1fr auto; gap: 4px 10px; align-items: center; padding: 6px 4px; border-bottom: 1px solid var(--grid); font-size: 13px; }
 .leg .sw { width: 12px; height: 12px; border-radius: 3px; }
 .leg.click { cursor: pointer; }
-.leg.click:hover { background: var(--hover); }
+.leg.click:hover, .leg [data-zoom]:hover { background: var(--hover); }
+.leg.on { background: var(--accent-soft); border-radius: 6px; }
 .name-input { width: 260px; }
 
 /* Leaflet an Thema anpassen */
@@ -218,8 +226,7 @@ footer.foot { color: var(--muted); font-size: 12px; text-align: center; padding:
   header.top { flex-wrap: wrap; gap: 10px; }
   .top-status { margin-left: 0; }
   .settings-grid { grid-template-columns: 1fr; }
-  .viewer-side { display: none; }
-  .viewer-side.mobile-open { display: block; position: absolute; right: 0; top: 0; bottom: 0; background: var(--surface); z-index: 800; }
+  .viewer-side { position: absolute; right: 0; top: 0; bottom: 0; width: min(330px, 88%); background: var(--surface); z-index: 800; box-shadow: -6px 0 20px rgba(0,0,0,.25); }
 }
 @media (max-width: 700px) {
   main { padding: 14px; }

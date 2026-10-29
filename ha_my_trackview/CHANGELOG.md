@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.0 – 2026-10-29
+
+- Kartenansicht: Reise, Status und Bedienelemente stehen oben, die Kennzahlen-Zeile darunter direkt über der Karte
+- Details-Knopf blendet Name und Etappenliste jetzt auf allen Bildschirmgrößen ein/aus (Einstellung wird gemerkt)
+- Ausgewählte Etappe (Klick in Liste oder Karte) liegt oben, wird hervorgehoben, die übrigen abgeblendet; gleiches für Reisen in der Mehrfachansicht
+- Log-Seite: „Log leeren“
+- PayPal-Spendenknopf neben der GPS-Datei-Anzeige
+- Startwarnung behoben: `bashio::app.version` statt `bashio::addon.version`
+
 ## 1.0.0 – 2026-10-29
 
 Erste Version / first release.
