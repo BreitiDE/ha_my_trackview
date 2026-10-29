@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.1 – 2026-10-29
+
+- Spendenknopf heißt jetzt „Unterstützen“ / „Donate“ und sitzt oben rechts in der Menüzeile
+- Beim Überfahren erscheint ein kleines Overlay mit Dankestext statt des Browser-Tooltips
+
 ## 1.1.0 – 2026-10-29
 
 - Kartenansicht: Reise, Status und Bedienelemente stehen oben, die Kennzahlen-Zeile darunter direkt über der Karte

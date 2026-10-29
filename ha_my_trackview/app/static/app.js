@@ -178,6 +178,8 @@ function renderMenu() {
   else if (st.last_result && st.last_result.error) { dot = "err"; txt = t("st_error"); }
   else if (st.tiles_online === false) { dot = "warn"; txt = t("st_offline"); }
   $("#topStatus").innerHTML = `<span class="dot ${dot}"></span>${esc(txt)}<span class="muted">· v${esc(S.info.version)}</span>`;
+  $("#donate").innerHTML = `<a class="donate" href="${DONATE_URL}" target="_blank" rel="noopener" aria-describedby="donateTip"><svg class="i" viewBox="0 0 24 24"><path d="M12 21s-7-4.4-9.3-8.6C1.2 9.6 2.6 6 6 5.6c2-.2 3.4.9 4 2 .6-1.1 2-2.2 4-2 3.4.4 4.8 4 3.3 6.8C19 16.6 12 21 12 21z" fill="currentColor" stroke="none"/></svg>${esc(t("donate_btn"))}</a>
+    <div class="donate-tip" id="donateTip" role="tooltip">${esc(t("donate_tip"))}</div>`;
 }
 
 // ------------------------------------------------------------------ Stats
@@ -245,7 +247,6 @@ function shell(scope) {
     <button class="btn primary lg" data-act="import">${ic("refresh")}${t("btn_import_now")}</button>
     <button class="btn lg" data-act="reimport">${ic("sync")}${t("btn_reimport")}</button>
     <div class="filebox">${ic("file")}<span class="hide-sm">${t("gps_file")}</span><code title="${esc(S.settings.gps_file)}">${esc(S.settings.gps_file)}</code><a href="#/settings">${t("change")}</a></div>
-    <a class="donate" href="${DONATE_URL}" target="_blank" rel="noopener" title="${esc(t("donate_tip"))}" aria-label="${esc(t("donate_tip"))}"><svg class="i" viewBox="0 0 24 24"><path d="M12 21s-7-4.4-9.3-8.6C1.2 9.6 2.6 6 6 5.6c2-.2 3.4.9 4 2 .6-1.1 2-2.2 4-2 3.4.4 4.8 4 3.3 6.8C19 16.6 12 21 12 21z" fill="currentColor" stroke="none"/></svg>PayPal</a>
   </div>
   <div id="notices"></div>
   <div class="stats" id="stats"></div>

@@ -25,7 +25,7 @@ from pdfexport import TEXT as PDF_TEXT  # noqa: E402
 from pdfexport import build_pdf  # noqa: E402
 from tiles import TileCache  # noqa: E402
 
-VERSION = os.environ.get("TRACKVIEW_VERSION", "1.1.0")
+VERSION = os.environ.get("TRACKVIEW_VERSION", "1.1.1")
 DATA = os.environ.get("TRACKVIEW_DATA", "/data")
 PORT = int(os.environ.get("TRACKVIEW_PORT", "8099"))
 DEV = os.environ.get("TRACKVIEW_DEV") == "1"
