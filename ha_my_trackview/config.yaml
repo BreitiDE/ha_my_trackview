@@ -1,0 +1,30 @@
+name: My TrackView
+version: "1.0.0"
+slug: ha_my_trackview
+description: >-
+  GPS-Reisen des Wohnmobils auf OpenStreetMap – Erkennung von Abfahrt und Rückkehr,
+  Etappen, PDF-Export. / Motorhome GPS trips on OpenStreetMap – departure/return
+  detection, stages, PDF export.
+url: https://github.com/BreitiDE/ha_my_trackview
+arch:
+  - aarch64
+  - amd64
+init: false
+startup: application
+boot: auto
+ingress: true
+ingress_port: 8099
+panel_icon: mdi:map-marker-path
+panel_title: My TrackView
+homeassistant_api: true
+map:
+  - type: homeassistant_config
+    path: /config
+    read_only: true
+backup_exclude:
+  - "tiles/*"
+  - "thumbs/*"
+options:
+  log_level: info
+schema:
+  log_level: list(debug|info|warning|error)

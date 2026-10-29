@@ -1,0 +1,6 @@
+configuration:
+  log_level:
+    name: Log-Level
+    description: >-
+      Detailgrad der Protokollausgabe. Alle anderen Einstellungen (GPS-Datei, Heimstandort,
+      Radius …) findest du in der App unter „Einstellungen“.

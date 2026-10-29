@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My TrackView</title>
+<link rel="icon" href="static/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="static/vendor/leaflet.css">
+<link rel="stylesheet" href="static/app.css?v={{VERSION}}">
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <span class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="2.2"/><circle cx="18" cy="5" r="2.2"/><path d="M8 19h7.5a3.5 3.5 0 0 0 0-7h-7a3.5 3.5 0 0 1 0-7H16"/></svg></span>
+    <span>My TrackView</span>
+  </div>
+  <nav class="menu" id="menu"></nav>
+  <div class="top-status" id="topStatus"></div>
+</header>
+<main id="view"></main>
+<footer class="foot" id="foot"></footer>
+<div class="toasts" id="toasts"></div>
+<script src="static/vendor/leaflet.js"></script>
+<script src="static/i18n.js?v={{VERSION}}"></script>
+<script src="static/app.js?v={{VERSION}}"></script>
+</body>
+</html>

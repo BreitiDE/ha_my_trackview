@@ -1,0 +1,6 @@
+configuration:
+  log_level:
+    name: Log level
+    description: >-
+      Verbosity of the log output. All other settings (GPS file, home location, radius …)
+      are on the "Settings" page inside the app.
