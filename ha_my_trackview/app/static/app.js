@@ -796,6 +796,7 @@ const FIELDS = [
     { k: "leave_points", type: "number", label: "set_leave", help: "set_leave_h", step: 1, min: 1 },
     { k: "stage_gap_min", type: "number", label: "set_gap", help: "set_gap_h", step: 1, min: 1 },
     { k: "min_trip_km", type: "number", label: "set_min", help: "set_min_h", step: 0.1, min: 0 },
+    { k: "min_stage_km", type: "number", label: "set_min_stage", help: "set_min_stage_h", step: 0.1, min: 0 },
     { k: "max_speed_kmh", type: "number", label: "set_vmax", help: "set_vmax_h", step: 10, min: 20 },
     { k: "jump_km", type: "number", label: "set_jump", help: "set_jump_h", step: 0.5, min: 0.1 },
   ]},

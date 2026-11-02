@@ -25,7 +25,7 @@ from pdfexport import TEXT as PDF_TEXT  # noqa: E402
 from pdfexport import build_pdf  # noqa: E402
 from tiles import TileCache  # noqa: E402
 
-VERSION = os.environ.get("TRACKVIEW_VERSION", "1.1.1")
+VERSION = os.environ.get("TRACKVIEW_VERSION", "1.2.0")
 DATA = os.environ.get("TRACKVIEW_DATA", "/data")
 PORT = int(os.environ.get("TRACKVIEW_PORT", "8099"))
 DEV = os.environ.get("TRACKVIEW_DEV") == "1"
@@ -74,6 +74,7 @@ SETTING_VALIDATORS = {
     "leave_points": lambda v: _num(v, 1, 600, int),
     "stage_gap_min": lambda v: _num(v, 1, 100000),
     "min_trip_km": lambda v: _num(v, 0, 10000),
+    "min_stage_km": lambda v: _num(v, 0, 1000),
     "max_speed_kmh": lambda v: _num(v, 20, 2000),
     "jump_km": lambda v: _num(v, 0.1, 100000),
     "file_timezone": lambda v: v if v in ("utc", "local") else (_ for _ in ()).throw(ValueError()),

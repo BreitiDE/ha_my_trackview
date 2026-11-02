@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.0 – 2026-11-02
+
+- Neue Einstellung „Mindestgröße einer Etappe“ (Standard 1 km, 0 = aus): Etappen, deren Punkte enger beieinanderliegen – typisch GPS-Zappeln am Stellplatz – werden entfernt, samt ihrer Kilometer und Fahrzeit
+- Gemessen wird die räumliche Ausdehnung der Etappe, nicht die gefahrene Strecke (Zappeln summiert sich sonst schnell auf über 1 km)
+- Abfahrt von und Ankunft zu Hause bleiben immer erhalten
+- Reisen behalten ihren Schlüssel, auch wenn Etappen wegfallen – „Abgleichen“ aktualisiert bestehende Reisen ohne Duplikate
+- Log meldet die Anzahl gefilterter Etappen pro Import
+
 ## 1.1.1 – 2026-10-29
 
 - Spendenknopf heißt jetzt „Unterstützen“ / „Donate“ und sitzt oben rechts in der Menüzeile

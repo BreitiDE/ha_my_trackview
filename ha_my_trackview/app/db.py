@@ -22,6 +22,7 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "leave_points": 5,
     "stage_gap_min": 30,
     "min_trip_km": 1.0,
+    "min_stage_km": 1.0,
     "max_speed_kmh": 250,
     "jump_km": 5.0,
     "file_timezone": "utc",          # utc | local
@@ -37,7 +38,7 @@ DEFAULT_SETTINGS: dict[str, Any] = {
 
 # Einstellungen, deren Änderung die Erkennung beeinflusst
 DETECTION_KEYS = ("home_lat", "home_lon", "home_radius_m", "leave_points", "stage_gap_min",
-                  "min_trip_km", "max_speed_kmh", "jump_km", "file_timezone")
+                  "min_trip_km", "min_stage_km", "max_speed_kmh", "jump_km", "file_timezone")
 
 
 def pack_points(points: list) -> bytes:

@@ -97,9 +97,53 @@ class LineParser:
 
 
 # ------------------------------------------------------------- Statistiken
+def filter_short_stages(pts: list, params: dict, status: str) -> tuple[list, int]:
+    """Entfernt Etappen, deren Ausdehnung unter ``min_stage_m`` liegt (GPS-Zappeln am Stellplatz).
+
+    Geschützt bleiben die erste Etappe einer Reise (Abfahrt von zu Hause) und die
+    letzte Etappe einer abgeschlossenen Reise (Ankunft zu Hause). Bleibt sonst nichts
+    übrig, wird die längste Etappe behalten. Rückgabe: (Punkte, Anzahl entfernt).
+    """
+    min_m = params.get("min_stage_m", 0) or 0
+    gap = params["stage_gap_s"]
+    if min_m <= 0 or len(pts) < 2:
+        return pts, 0
+    stages, cur = [], [pts[0]]
+    for i in range(1, len(pts)):
+        if pts[i][0] - pts[i - 1][0] > gap:
+            stages.append(cur)
+            cur = []
+        cur.append(pts[i])
+    stages.append(cur)
+    if len(stages) < 2:
+        return pts, 0
+    # Maßstab ist die räumliche Ausdehnung (Diagonale der Bounding-Box), nicht die
+    # gefahrene Strecke: Zappeln summiert sich schnell auf über 1 km Weg, obwohl das
+    # Fahrzeug auf der Stelle steht.
+    lengths = []
+    for seg in stages:
+        la = [p[1] for p in seg]
+        lo = [p[2] for p in seg]
+        lengths.append(haversine(min(la), min(lo), max(la), max(lo)))
+    keep = []
+    last = len(stages) - 1
+    for i, d in enumerate(lengths):
+        protected = (i == 0 and status in ("trip", "running")) or (i == last and status == "trip")
+        keep.append(protected or d >= min_m)
+    if not any(keep):
+        keep[max(range(len(lengths)), key=lambda k: lengths[k])] = True
+    removed = keep.count(False)
+    if not removed:
+        return pts, 0
+    out = [p for seg, k in zip(stages, keep) if k for p in seg]
+    return out, removed
+
+
 def build_candidate(points: list, params: dict, status: str, reason: str | None) -> dict:
     """Bereinigt Punkte und berechnet Kennzahlen für einen Track."""
     pts = dedupe(points)
+    raw_start = pts[0][0]
+    pts, removed_stages = filter_short_stages(pts, params, status)
     gap = params["stage_gap_s"]
     jump_m = params["jump_m"]
     breaks: list[int] = []
@@ -143,6 +187,8 @@ def build_candidate(points: list, params: dict, status: str, reason: str | None)
         "point_count": len(pts),
         "bbox": (minlat, minlon, maxlat, maxlon),
         "points": pts,
+        "raw_start": raw_start,          # stabiler Schlüssel, auch wenn Etappen gefiltert werden
+        "removed_stages": removed_stages,
     }
 
 
@@ -286,7 +332,7 @@ class Detector:
         status = "unassigned" if self.seg_reason else "trip"
         cand = build_candidate(self.seg, self.p, status, self.seg_reason)
         if cand["distance_m"] >= self.p["min_trip_m"] or status == "unassigned":
-            cand["key"] = cand["start_ts"]
+            cand["key"] = cand["raw_start"]
             self.candidates.append(cand)
         self.state = HOME
         self.seg = []
@@ -300,7 +346,7 @@ class Detector:
         resume = {"state": self.state, "offset": 0, "ts": 0}
         if self.state == AWAY and self.seg:
             cand = build_candidate(self.seg, self.p, "running", self.seg_reason)
-            cand["key"] = cand["start_ts"]
+            cand["key"] = cand["raw_start"]
             self.candidates.append(cand)
             if self.seg_anchor is not None:
                 resume.update(state=HOME, offset=self.seg_anchor[0], ts=self.seg_anchor[1])
@@ -322,6 +368,7 @@ def detection_params(settings: dict) -> dict:
         "leave_points": max(1, int(settings["leave_points"])),
         "stage_gap_s": max(60, int(float(settings["stage_gap_min"]) * 60)),
         "min_trip_m": float(settings["min_trip_km"]) * 1000,
+        "min_stage_m": float(settings.get("min_stage_km", 1.0)) * 1000,
         "max_speed_kmh": float(settings["max_speed_kmh"]),
         "jump_m": float(settings["jump_km"]) * 1000,
     }
@@ -407,12 +454,16 @@ def run_import(db, settings: dict, local_tz: ZoneInfo, mode: str = "incremental"
                               params=params, restore_deleted=restore_deleted,
                               window_start=(skip_ts if skip_ts is not None else st.get("resume_ts", 0))
                               if mode == "incremental" else None)
-    result.update(lines=lines, invalid=invalid, out_of_order=out_of_order,
+    result.update(stages_filtered=sum(c.get("removed_stages", 0) for c in det.candidates),
+                  lines=lines, invalid=invalid, out_of_order=out_of_order,
                   dropped=det.dropped_total, bytes=offset - start_offset, mode=mode,
                   seconds=round(time.time() - t0, 2))
     db.set_state({"last_import": int(time.time()), "last_result": result})
     _LOG.info("Import (%s): %s lines, %s new, %s updated, %s overlapping skipped, %.2fs",
               mode, lines, result["inserted"], result["updated"], result["overlap"], result["seconds"])
+    if result["stages_filtered"]:
+        _LOG.info("%s short stage(s) below %.1f km filtered (GPS jitter)",
+                  result["stages_filtered"], params["min_stage_m"] / 1000)
     if invalid:
         _LOG.warning("%s invalid lines skipped", invalid)
     if out_of_order:
@@ -502,5 +553,5 @@ def split_track(db, tid: int, stage_index: int, params: dict) -> tuple[int, int]
         b["status"] = "unassigned"
     with db.transaction() as c:
         db.update_track_geometry(c, tid, a, edited=1)
-        nid = db.insert_track(c, b, edited=1, color=t["color"], keys=[b["start_ts"]])
+        nid = db.insert_track(c, b, edited=1, color=t["color"], keys=[b["raw_start"]])
     return tid, nid

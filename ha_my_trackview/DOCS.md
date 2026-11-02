@@ -18,6 +18,7 @@ unter **Einstellungen** vorgenommen; in der App-Konfiguration von Home Assistant
 | Punkte zum Bestätigen der Abfahrt | 5 | Punkte in Folge außerhalb des Radius, bevor eine Abfahrt zählt. |
 | Neue Etappe nach Pause ab | 30 min | Lücke im Log, ab der eine neue Etappe beginnt. |
 | Mindeststrecke einer Reise | 1 km | Kürzere Fahrten werden ignoriert. |
+| Mindestgröße einer Etappe | 1 km | Etappen, deren Punkte enger beieinanderliegen (GPS-Zappeln am Stellplatz), werden samt Kilometern und Fahrzeit entfernt. Abfahrt und Ankunft zu Hause bleiben erhalten. 0 = aus. |
 | Ausreißer-Filter | 250 km/h | Punkte mit unplausiblem Sprung werden verworfen. |
 | Sprung = fehlende Daten ab | 5 km | Springt die Position nach einer Pause weiter, wird der Abschnitt „nicht zugeordnet“. |
 | Kachel-Server | OpenStreetMap | URL-Vorlage mit `{z}`, `{x}`, `{y}`. |
@@ -68,6 +69,7 @@ page; the Home Assistant app configuration only contains the log level.
 | Points to confirm departure | 5 | Consecutive points outside the radius before a departure counts. |
 | New stage after a pause of | 30 min | Gap in the log that starts a new stage. |
 | Minimum trip distance | 1 km | Shorter drives are ignored. |
+| Minimum stage size | 1 km | Stages whose points stay closer together (GPS jitter while parked) are removed along with their distance and driving time. Departure from and arrival at home are kept. 0 = off. |
 | Outlier filter | 250 km/h | Points implying an implausible jump are discarded. |
 | Jump = missing data from | 5 km | If the position jumps further after a pause, the section becomes “unassigned”. |
 | Tile server | OpenStreetMap | URL template with `{z}`, `{x}`, `{y}`. |
